@@ -34,6 +34,7 @@ spring:
         - 'classpath:/data_song.sql'
         - 'classpath:/data_my_list.sql'
         - 'classpath:/data_song_history.sql'
+
   # NoSQL setting
   data:
     # Redis setting
@@ -55,8 +56,8 @@ oauth:
   kakao:
     client-id: df089f203219a3b6f8b59089d4381d02
     client-secret: w3dHiDuDOiluFi2vjWpzSo1BbBhTnvpu
-    redirect-uri: http://localhost:5173/member/loading/kakao
-    #    redirect-uri: http://localhost:8080/member/kakao
+#    redirect-uri: http://localhost:5173/member/loading/kakao
+    redirect-uri: https://j10c205.p.ssafy.io/member/loading/kakao
     scope:
       - profile_nickname
       - profile_image
