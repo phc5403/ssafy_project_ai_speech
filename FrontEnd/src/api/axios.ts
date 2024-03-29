@@ -43,6 +43,8 @@ const onRequestError = (error: AxiosError): Promise<AxiosError> => {
 instance.defaults.headers.common["Authorization"] = "";
 instance.interceptors.request.use(onRequest, onRequestError);
 
+
+
 instance.interceptors.response.use(
   (res) => {
     if (res.data.dataHeader.successCode === 0) {
@@ -50,6 +52,7 @@ instance.interceptors.response.use(
     }
   },
   (error: AxiosError<{ message: string; errorCode: string }>) => {
+
     switch (error.response?.status) {
       case 400: {
         console.log(

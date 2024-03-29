@@ -16,7 +16,7 @@ const Logout = () => {
 
       // 서버에 로그아웃 요청 보내기
       await axios.post(
-        "http://j10c205.p.ssafy.io:9002/api/v1/member/logout",
+        "https://j10c205.p.ssafy.io/api/v1/member/logout",
         {},
         {
           headers: {
@@ -39,6 +39,7 @@ const Logout = () => {
     <div>
       <button onClick={handleLogout}>로그아웃</button>
     </div>
+    
   );
 };
 

@@ -22,11 +22,12 @@ const KakaoRedirect: React.FC = () => {
     try {
       // 카카오 서버에 코드 전달하여 토큰 요청
       const response = await axios.get(
-        `http://j10c205.p.ssafy.io:9002/api/v1/member/kakao/login?code=${code}&prompt=login`
+        `https://j10c205.p.ssafy.io/api/v1/member/kakao/login?code=${code}&prompt=login`
       );
 
       // 토큰 받아오기 성공 시
       const token: string = response.data.dataBody.token.accessToken;
+      localStorage.setItem("accessToken", token); // 토큰을 localStorage에 저장
       document.cookie = `accessToken=${token}; path=/`; // 토큰을 쿠키에 저장
       navigate("/access");
     } catch (error) {
@@ -34,9 +35,11 @@ const KakaoRedirect: React.FC = () => {
     }
   };
 
-  return <div>
-    <Loading />
-  </div>;
+  return (
+    <div>
+      <Loading />
+    </div>
+  );
 };
 
 export default KakaoRedirect;
