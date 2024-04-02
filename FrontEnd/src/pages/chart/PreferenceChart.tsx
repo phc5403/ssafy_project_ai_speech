@@ -1,43 +1,40 @@
+import React, { useEffect, useState } from "react";
 import BottomSheet from "@/components/charts/BottomSheet";
 import Header from "@/components/layout/Header";
+import Loading from "@/components/common/Loading"; // 로딩 컴포넌트 추가
 import { useSongStore } from "@/store/useSongStore";
 import axios from "axios";
-import React, { useEffect, useState } from "react";
 
 const PreferenceChart: React.FC = () => {
-  const [Songs, setSongs] = useState<any[]>([]);
-  const setSelectedSong = useSongStore((state) => state.setSelectedSong); // useSongStore에서 setSelectedSong 함수를 가져옵니다.
+  const [loading, setLoading] = useState<boolean>(true); // 로딩 상태 추가
+  const [songs, setSongs] = useState<any[]>([]);
+  const setSelectedSong = useSongStore((state) => state.setSelectedSong);
   const selectedSong = useSongStore((state) => state.selectedSong);
-
-  const openBottomSheet = (song: any) => {
-    setSelectedSong(song);
-  };
-
-  const closeBottomSheet = () => {
-    setSelectedSong(null);
-  };
+  const userId = localStorage.getItem("userId");
 
   useEffect(() => {
-    const fetchLikedSongs = async () => {
+    const fetchSongs = async () => {
       try {
         const token = localStorage.getItem("accessToken");
         const response = await axios.get(
-          "https://j10c205.p.ssafy.io/recommendations/chart/{memberId}",
+          `https://j10c205.p.ssafy.io/recommendations/chart/${userId}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           }
         );
-        setSongs(response.data.dataBody);
-        // console.log(response.data.dataBody);
+        setSongs(response.data);
+        // console.log(response.data)
+        setLoading(false); // 데이터 로딩 완료 후 상태 변경
       } catch (error) {
-        console.error("찜한 노래 목록을 가져오지 못했습니다.", error);
+        console.error("노래를 못 가져옴 ", error);
+        setLoading(false); // 데이터 로딩 실패 시 상태 변경
       }
     };
 
-    fetchLikedSongs();
-  }, []);
+    fetchSongs();
+  }, [userId]);
 
   const toggleLike = async (song: any) => {
     try {
@@ -72,21 +69,33 @@ const PreferenceChart: React.FC = () => {
     }
   };
 
+  const openBottomSheet = (song: any) => {
+    setSelectedSong(song);
+  };
+
+  const closeBottomSheet = () => {
+    setSelectedSong(null);
+  };
+
+  if (loading) {
+    return <Loading />; // 로딩 중일 때 로딩 컴포넌트 반환
+  }
+
   return (
     <div>
-      <Header title="최신차트" state={["back", "search"]} />
+      <Header title="취향차트" state={["back", "search"]} />
       <div className="sing-container">
         <div className="sing-content">
           <div className="sing-chart">
-            {Songs.map((song) => (
-              <div key={song.songId} className="sing-song">
-                <img src={song.songThumbnail} alt={song.songTitle} />
+            {songs.map((song) => (
+              <div key={song.id} className="sing-song">
+                <img src={song.song_thumbnail} alt={song.songTitle} />
                 <div
                   className="sing-song-info"
                   onClick={() => openBottomSheet(song)}
                 >
-                  <h3>{song.songTitle}</h3>
-                  <p>{song.artist}</p>
+                  <h3>{song.song_title}</h3>
+                  <p>{song.artist_name}</p>
                 </div>
                 <div
                   className="sing-song-like"
@@ -110,18 +119,18 @@ const PreferenceChart: React.FC = () => {
               isOpen={selectedSong !== null}
               onClose={closeBottomSheet}
               backgroundImageUrl={
-                selectedSong ? selectedSong.songThumbnail : ""
+                selectedSong ? selectedSong.song_thumbnail : ""
               }
             >
               {selectedSong && (
                 <div className="song-bottom">
                   <img
-                    src={selectedSong.songThumbnail}
-                    alt={selectedSong.songTitle}
+                    src={selectedSong.song_thumbnail}
+                    alt={selectedSong.song_title}
                   />
                   <div className="song-info">
-                    <h2>{selectedSong.songTitle}</h2>
-                    <p>{selectedSong.artist}</p>
+                    <h2>{selectedSong.song_title}</h2>
+                    <p>{selectedSong.artist_name}</p>
                   </div>
                 </div>
               )}
