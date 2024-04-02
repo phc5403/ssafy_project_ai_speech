@@ -152,6 +152,63 @@ def record(request, user_id):
         logger.error(e.detail)
         return Response(e.detail, status=status.HTTP_400_BAD_REQUEST)
 
-    # return Response({'data': data}, status=status.HTTP_200_OK)  # json
-    # return Response(status=status.HTTP_200_OK)
 
+@api_view(['GET'])
+def record_view(request, user_id):
+    sound_features = SoundFeature.objects.filter(user_pk=user_id)
+    serializer = SoundFeatureSerializer(sound_features, many=True)
+    return Response(serializer.data)
+
+
+@api_view(['GET'])
+def user_recommend(request, user_id):
+    logger.info(f'request 확인 : {user_id}')
+
+    sound = SoundFeature.objects.all()
+    df = pd.DataFrame(list(sound.values()))
+
+    idx = df[['user_pk']]
+    logger.info(f'idx : {idx}')  # 등록된 모든 User id / user_id 반환
+    df = df.drop(columns=['id', 'user_pk', 'min_note', 'max_note'])
+    scaled = sklearn.preprocessing.scale(df)
+    df = pd.DataFrame(scaled, columns=df.columns)
+
+    # 코사인 유사도
+    similar = cosine_similarity(df)
+    similar_df = pd.DataFrame(similar, index=idx['user_pk'], columns=idx['user_pk'])
+
+    # 상위부터 cnt 명 수 만큼 찾기 / asce = 역순
+    logger.info(similar_df.loc[user_id].sort_values(ascending=False))
+    cur_user = similar_df.loc[user_id].sort_values(ascending=False)[1:4]
+    logger.info(f'cur_user: {cur_user}')
+
+    res_user = cur_user[cur_user >= 0.7]
+    logger.info(f'res_user: {type(res_user.index.tolist())}')  # list
+
+    # 1. 딕셔너리로 반환
+    # result = {
+    #     'data': res_user.index
+    # }
+
+    # 2. list로 반환
+    result = res_user.index.tolist()  # list
+
+    logger.info(f'result -> {result}')
+
+    return Response(result)
+
+
+
+
+
+
+
+
+'''
+[ 마페 ]
+1. 남/여 평균 주파수대 + 사용자 주파수대 = 막대 그래프
+2. 옥타브 범위 그래프 = chart.js
+3. ++?
+
+requirements.txt 갱신
+'''
