@@ -1,15 +1,48 @@
-.container {
-  display: flex;
+.albumcover {
+  // display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   z-index: 1;
+  height: 100%;
   // background-image: url('../../../public/icons/android-chrome-512x512.png');
   // background-size: cover;
 }
+.content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center; /* 수직 가운데 정렬을 위해 추가 */
+  z-index: 999;
+}
 
-// .background {
-//   // background-image: url('../../assets/image/logo.png') ;
-//   background-image: url('../../../public/icons/android-chrome-512x512.png');
-//   background-size: cover;
-// }
+.player {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  height: fit-content;
+  margin-top: 10%;
+}
+
+.toggle {
+  margin-left: 5%;
+}
+
+.controller {
+  text-align: center; /* 텍스트를 가운데 정렬합니다. */
+  justify-self: center;
+  // margin-right: 33%;
+}
+
+.pitch {
+  margin-right: 5%;
+  margin-left: 10%;
+  button {
+    border: 0;
+    background-color: transparent;
+    p {
+      font-weight: 500;
+      color: white;
+    }
+  }
+}

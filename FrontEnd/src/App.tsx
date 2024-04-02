@@ -8,7 +8,7 @@ import Information from "./pages/accounts/Information.tsx";
 import Voicetraining from "./pages/accounts/Voicetraining.tsx";
 import KakaoRedirect from "./components/accounts/KakaoRedirect.tsx";
 import Layout from "./layout/Layout";
-import Record from "./components/sing/Record.tsx";
+import Record from "./components/record/Record.tsx";
 import "@/api/axios.ts";
 import Single from "./pages/single/Single.tsx";
 import MainChart from "./pages/chart/MainChart.tsx";
@@ -17,7 +17,6 @@ import PopularChart from "./pages/chart/PopularChart.tsx";
 import GenreChart from "./pages/chart/GenreChart.tsx";
 import PreferenceChart from "./pages/chart/PreferenceChart.tsx";
 import Search from "./pages/chart/Search.tsx";
-import mainMypage from "./pages/mypage/mainMypage";
 import MainMypage from "./pages/mypage/mainMypage";
 import Pop from "./pages/chart/genres/pop.tsx";
 import Rock from "./pages/chart/genres/rock.tsx";
@@ -30,6 +29,10 @@ import Rnb from "./pages/chart/genres/rnb.tsx";
 import Ost from "./pages/chart/genres/ost.tsx";
 import Agitation from "./pages/chart/genres/agitation.tsx";
 import Trot from "./pages/chart/genres/trot.tsx";
+import Preview from "./pages/sing/Preview.tsx";
+import FirstDuet from "./pages/duet/FirstDuet.tsx";
+import ReadReelsPage from './pages/reels/ReadReelsPage';
+
 
 const App: React.FC = () => {
   return (
@@ -43,6 +46,9 @@ const App: React.FC = () => {
         <Route path="/voicetraining" element={<Voicetraining />} />
         <Route path="/record" element={<Record />} />
         <Route path="/single" element={<Single />} />
+        <Route path="/firstduet" element={<FirstDuet />} />
+        <Route path="/preview" element={<Preview />} />
+        <Route path="/reels" element={<ReadReelsPage />} />
         {/* 로그인 상태에 따라 수정하기 // 중첩 라우팅 사용하기 */}
         <Route element={<Layout />}>
           {/* 차트 */}
