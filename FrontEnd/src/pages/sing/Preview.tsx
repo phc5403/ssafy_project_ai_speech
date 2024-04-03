@@ -2,18 +2,62 @@ import React, { useEffect, useRef, useState } from "react";
 import useRecordStore from "@/store/useRecordStore";
 import AlbumCover from "@/components/single/AlbumCover";
 import Header from "@/components/layout/Header";
-import { useMusicStore } from "@/store/useMusicStore";
-import ReactPlayer from "react-player";
+import styles from "@styles/sing/Preview.module.scss";
 import useSaveStore from "@/store/useSaveStore";
 import S3Upload from "@/util/S3Upload";
 import { instance } from "@/api/axios";
-// import { combineAudioAndVideo } from "@/util/conbine";
+import { useDuetStore, useSongStore } from "@/store/useSongStore";
+import { Background, Filter } from "@/components/single/Background";
+import { useNavigate } from "react-router";
 
 const Preview: React.FC = () => {
-  const { info } = useMusicStore();
+  const mode = useSaveStore((state) => state.mode);
+
+  console.log(mode)
+  const navigate = useNavigate();
+  const selectedSong = useSongStore((state) => state.selectedSong);
+  console.log(selectedSong)
+  const duetSong = useDuetStore((state) => state.duetData);
+  const [albumData, setAlbumData] = useState({
+    artist: "",
+    songTitle: "",
+    songThumbnail: "",
+    songId: 0,
+  });
+  console.log(albumData)
   const { videoUrl, musicUrl, voiceUrl } = useRecordStore();
-  const { songId, songTitle } = info;
-  const videoPlayerRef = useRef<ReactPlayer>(null);
+
+  useEffect(() => {
+    if (mode === ("single" || "firstDuet") && selectedSong) {
+      setAlbumData({
+        artist: selectedSong?.artist,
+        songTitle: selectedSong?.songTitle,
+        songThumbnail: selectedSong?.songThumbnail,
+        songId: selectedSong.songId,
+      });
+    }else if (mode === 'firstDuet' && selectedSong) {
+      setAlbumData({
+        artist: selectedSong?.artist,
+        songTitle: selectedSong?.songTitle,
+        songThumbnail: selectedSong?.songThumbnail,
+        songId: selectedSong.songId,
+      });
+    } 
+    else if (mode === 'secondDuet' && duetSong) {
+      setAlbumData({
+        artist: duetSong?.artistName,
+        songTitle: duetSong?.songTitle,
+        songThumbnail: duetSong?.songThumbnail,
+        songId: duetSong.songId,
+      });
+    }
+  }, []);
+
+
+  const basicUrl = `https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcTMN3Drroa4Vfutn4ARik9LACvb57TO5ADHC5n5sBeTBg&s`;
+  const videoPlayerRef = useRef<HTMLVideoElement>(null);
+  const musicRef = useRef<HTMLAudioElement>(null);
+  const voiceRef = useRef<HTMLAudioElement>(null);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [videoPath, setVideoPath] = useState<string>("");
   const [voicePath, setVoicePath] = useState<string>("");
@@ -22,40 +66,64 @@ const Preview: React.FC = () => {
   console.log(`videoPath : ${videoPath}`);
   console.log(`voicePath : ${voicePath}`);
   const { voiceBlob, musicBlob, videoBlob } = useSaveStore();
-
+  console.log(voiceBlob);
+  console.log(musicBlob);
+  console.log(videoBlob);
   const [save, setSaved] = useState<boolean>(false);
   console.log(save);
   //---모드 =----
-  const mode = useSaveStore((state) => state.mode);
   //-------------------------------------------------------
   const togglePlayback = () => {
     const player = videoPlayerRef.current;
-    if (player) {
-      isPlaying
-        ? player.getInternalPlayer().pause()
-        : player.getInternalPlayer().play();
-      setIsPlaying(!isPlaying);
+    const voice = voiceRef.current;
+    const music = musicRef.current;
+    if (player && music) {
+      if (player.paused && music.paused) {
+        player.play();
+        music.play();
+        setIsPlaying(true);
+      } else {
+        player.pause();
+        music.pause();
+        setIsPlaying(false);
+      }
+    } else if (voice && music) {
+      if (voice.paused && music.paused) {
+        voice.play();
+        music.play();
+        setIsPlaying(true);
+      } else {
+        voice.pause();
+        music.pause();
+        setIsPlaying(false);
+      }
     }
   };
+
   const currentDate = new Date();
   const timestamp = currentDate.toISOString().replace(/:/g, "-");
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const uploads = [];
     if (videoBlob) {
-      const fileName = `video/${songTitle}__${timestamp}`;
+      const fileName = `video/${albumData.songTitle}__${timestamp}`;
       const videoUpload = S3Upload(videoBlob, fileName)
         .then((location) => {
+          console.log("videoPath");
+          console.log(location);
+
           setVideoPath(location);
         })
         .catch((error) => {
           console.error("Upload failed:", error);
         });
       uploads.push(videoUpload);
-    } else if (voiceBlob) {
-      const fileName = `voice/${songTitle}__${timestamp}`;
+    }
+    if (!videoBlob && voiceBlob) {
+      const fileName = `voice/${albumData.songTitle}__${timestamp}`;
       const voiceUpload = S3Upload(voiceBlob, fileName)
         .then((location) => {
+          console.log("voicePath");
           console.log(location);
           setVoicePath(location);
         })
@@ -65,9 +133,10 @@ const Preview: React.FC = () => {
       uploads.push(voiceUpload);
     }
     if (musicBlob) {
-      const fileName = `music/${songTitle}__${timestamp}`;
+      const fileName = `music/${albumData.songTitle}__${timestamp}`;
       const musicUpload = S3Upload(musicBlob, fileName)
         .then((location) => {
+          console.log("musicPath");
           console.log(location);
           setMusicPath(location);
         })
@@ -76,69 +145,88 @@ const Preview: React.FC = () => {
         });
       uploads.push(musicUpload);
     }
-    // Promise.all(uploads).then(() => {
-    // });
+
+    await Promise.all(uploads);
     setSaved(true);
   };
 
+  const goMain = () => {
+    navigate("/mainchart");
+  };
+
   useEffect(() => {
+    console.log(videoPath);
+    console.log(musicPath);
+    console.log(voicePath);
     if (save === true) {
       if (mode === "single") {
         console.log(videoPath);
         const data = {
-          name: `Single_userId_${songTitle}_${timestamp}`,
+          name: `Single_userId_${albumData.songTitle}_${timestamp}`,
           userPath: videoPath || voicePath,
           audioPath: musicPath,
         };
         instance
-          .post(`/api/v1/single/create/${songId}`, data)
-          .then((res) => console.log(res));
+          .post(`/api/v1/single/create/${albumData.songId}`, data)
+          .then((res) => {
+            console.log(res);
+            instance.post(`/api/v1/song/history/${albumData.songId}`);
+            navigate("/mainchart");
+          });
       } else if (mode == "firstDuet") {
         const data = {
-          name: `First_userId_${songTitle}_${timestamp}`,
+          name: `First_userId_${albumData.songTitle}_${timestamp}`,
           userPath: videoPath || voicePath,
           audioPath: musicPath,
         };
-        instance.post(`/api/v1/duet/create/${songId}`, data);
+        instance
+          .post(`/api/v1/duet/create/${albumData.songId}`, data)
+          .then((res) => {
+            console.log(res);
+          
+            navigate("/mainchart")
+          });
       } else {
         const data = {
-          name: `Second_userId_${songTitle}_${timestamp}`,
+          name: `Second_userId_${albumData.songTitle}_${timestamp}`,
           path: videoPath,
-          uploaderId: `userId`,
+          uploaderId: `${duetSong}`,
         };
-        instance.post(`/api/v1/duet/participate/${songId}`, data);
+        instance
+          .post(`/api/v1/duet/participate/${albumData.songId}`, data)
+          .then(() => navigate("/mainchart"));
       }
     }
-  }, [save, videoPath]);
+  }, [save, videoPath, musicPath, voicePath]);
 
   return (
     <div>
       <Header title="다시 듣기" state={["back", "close"]} page="mainchart" />
-      <AlbumCover musicInfo={info} />
-      {videoUrl && (
-        <ReactPlayer
-          ref={videoPlayerRef}
-          url={videoUrl} // null이 아닌 경우에만 ReactPlayer 렌더링
-          playing={isPlaying}
-          controls={true}
-          width="100%"
-          height="auto"
-        />
+      {selectedSong && (
+        <>
+          <Background $imageUrl={albumData.songThumbnail || basicUrl} />
+          <Filter />
+          <div className={styles.box}>
+            <div className={styles.cover}>
+              <AlbumCover musicInfo={albumData} />
+            </div>
+            {videoUrl && (
+              <video
+                ref={videoPlayerRef}
+                src={videoUrl}
+                className={styles.player}
+              />
+            )}
+            {voiceUrl && !videoUrl && <audio src={voiceUrl} ref={voiceRef} />}
+            {musicUrl && <audio src={musicUrl} ref={musicRef} />}
+          </div>
+        </>
       )}
-      {voiceUrl && !videoUrl && (
-        <ReactPlayer
-          ref={videoPlayerRef}
-          url={voiceUrl} // null이 아닌 경우에만 ReactPlayer 렌더링
-          playing={isPlaying}
-          controls={true}
-          width="100%"
-          height="auto"
-        />
-      )}
-      {musicUrl && <audio src={musicUrl} controls />}{" "}
-      {/* musicUrl이 null일 때 audio 태그가 렌더링되지 않도록 조건 추가 */}
-      <button onClick={togglePlayback}>{isPlaying ? "Pause" : "Play"}</button>
-      <button onClick={handleSave}>저장</button>
+      <div className={styles.buttonbox}>
+        <button onClick={togglePlayback}>{isPlaying ? "정지" : "재생"}</button>
+        <button onClick={handleSave}>저장</button>
+        <button onClick={goMain}>저장하지 않고 끝내기</button>
+      </div>
     </div>
   );
 };

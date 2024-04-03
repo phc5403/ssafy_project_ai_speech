@@ -5,10 +5,11 @@ import "@styles/accounts/Voicetraining.scss";
 import { getSoundMedia } from "@/util/record";
 import VolumeStatus from "@components/record/VolumeStatus";
 import { useNavigate } from "react-router-dom";
-import { logOnDev } from "@/util/logging";
 import Script from "@/components/record/Script";
 
 const Voicetraining: React.FC = () => {
+  const userId = localStorage.getItem("userId");
+
   const [stream, setStream] = useState<MediaStream | null>(null);
   const [media, setMedia] = useState<MediaRecorder | null>(null);
   const [source, setSource] = useState<MediaStreamAudioSourceNode | null>(null);
@@ -90,7 +91,7 @@ const Voicetraining: React.FC = () => {
         media.ondataavailable = async function (e) {
           console.log("녹음 데이터 사용 가능", e.data);
           // setAudioUrl(e.data);
-          await handleUpload(e.data)
+          await handleUpload(e.data);
         };
 
         if (media.state === "recording") {
@@ -114,19 +115,18 @@ const Voicetraining: React.FC = () => {
       console.log("미디어 레코더가 설정되지 않음");
     }
   };
-  const handleUpload = async (data : Blob) => {
+  const handleUpload = async (data: Blob) => {
     if (window.confirm("녹음이 완료되었습니다. 다음으로 넘어가시겠습니까?")) {
-        await UploadFile(data);
-        navigate("/");
+      await UploadFile(data);
+      navigate("/");
     }
-};
-  const UploadFile =async (data:Blob) => {
-      const sound: File = new File([data], "userAudio.wav", {
-        lastModified: new Date().getTime(),
-        type: "audio/wav",
-      });
-      await SendRecord(sound);
-      logOnDev("전송완료!");
+  };
+  const UploadFile = async (data: Blob) => {
+    const sound: File = new File([data], `${userId}.wav`, {
+      lastModified: new Date().getTime(),
+      type: "audio/wav",
+    });
+    await SendRecord(sound);
   };
 
   return (
@@ -138,7 +138,7 @@ const Voicetraining: React.FC = () => {
       <div className="voice-mic">
         <img src="././src/assets/icon/Record.png" alt="마이크1" />
         <h3>음색 검사 절차 및 유의 사항</h3>
-        <p>1. 조용한 환경에서 녹음을 실시한다.</p>
+        <p>1. 조용한 환경에서 녹음을 실시합니다.</p>
         <p>2. 녹음시작을 클릭하고 아래 제시된 노래를 부릅니다.</p>
         <p>3. 중간 제출을 원하는 경우 녹음 완료 버튼을 누릅니다.</p>
         <Script isTrackingStarted={isTrackingStarted} />
