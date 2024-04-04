@@ -98,9 +98,9 @@ const Voicetraining: React.FC = () => {
   const handleUpload = async (data: Blob) => {
     try {
       await UploadFile(data);
-      if (window.confirm("녹음이 완료되었습니다. 다음으로 넘어가시겠습니까?")) {
-        // navigate("/mainchart");
-      }
+      // if (window.confirm("녹음이 완료되었습니다. 다음으로 넘어가시겠습니까?")) {
+      //   // navigate("/mainchart");
+      // }
     } catch (error) {
       console.error("UploadFile 실행 중 오류 발생:", error);
     }
@@ -124,6 +124,7 @@ const Voicetraining: React.FC = () => {
       console.log("S3에 업로드된 파일 URL:222", s3Url);
       // 필요한 경우 추가 처리
       // await SendRecord(sound);
+      
     } catch (error) {
       console.error("파일 업로드 중 오류 발생:", error);
     }
